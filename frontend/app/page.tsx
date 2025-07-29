@@ -9,7 +9,10 @@ import SalaryAnalysisResult from '../components/Results/SalaryAnalysisResult'
 import CareerCoachingResult from '../components/Results/CareerCoachingResult'
 
 export default function Home() {
-  const [uploading, setUploading] = useState(false)
+const [careerUploading, setCareerUploading] = useState(false)
+const [careerStatusMessage, setCareerStatusMessage] = useState('')
+const [careerData, setCareerData] = useState(null)
+const [uploading, setUploading] = useState(false)
 const [statusMessage, setStatusMessage] = useState('')
 const fileInputRef = useRef<HTMLInputElement>(null)
 const [resultData, setResultData] = useState<any>(null)
@@ -35,25 +38,15 @@ const [bulletinData, setBulletinData] = useState<BulletinData>({
   },
   details: {
     salaireBase: 0,
-    primes: 0,
-    heuresSupp: 0,
-    cotisations: {
-      CNSS: 0,
-      AMO: 0,
-      RetraiteComplementaire: 0,
-      AssuranceChomage: 0
-    },
-    impots: {
-      IR: 0
-    },
-    netAPayer: 0
+    primes: [], 
+    heuresSupp: [], 
+    cotisations: [], 
+    impots: [], 
+    netAPayer: 0,
   },
   anomalies: [],
   recommandations: []
 })
-
-
-
 
   const [salaryFormData, setSalaryFormData] = useState({
     poste: '',
@@ -96,6 +89,7 @@ const [bulletinData, setBulletinData] = useState<BulletinData>({
     if (!response.ok) throw new Error('Erreur serveur')
 
     const data = await response.json()
+    console.log("📦 Données reçues de l'API :", data)
     setResultData(data)
     setStatusMessage('Analyse terminée ✅')
     // ⬇️ Ici on met à jour bulletinData à partir des vraies données API
@@ -109,17 +103,12 @@ setBulletinData({
   },
   details: {
     salaireBase: data.details?.salaireBase || 0,
-    primes: data.details?.primes || 0,
-    heuresSupp: data.details?.heuresSupp || 0,
-    cotisations: {
-      CNSS: data.details?.cotisations?.CNSS || 0,
-      AMO: data.details?.cotisations?.AMO || 0,
-      RetraiteComplementaire: data.details?.cotisations?.RetraiteComplementaire || 0,
-      AssuranceChomage: data.details?.cotisations?.AssuranceChomage || 0,
-    },
-    impots: {
-      IR: data.details?.impots?.IR || 0,
-    },
+    primes: data.details?.primes || [],
+
+    heuresSupp: data.details?.heuresSupp || [],
+    cotisations: data.details?.cotisations || [],
+    impots: data.details?.impots || [],
+
     netAPayer: data.details?.netAPayer || 0
   },
   anomalies: data.anomalies || [],
@@ -152,20 +141,26 @@ const mockBulletinData = {
     impots: 2000
   },
   details: {
-    salaireBase: 20000,
-    primes: 3000,
-    heuresSupp: 1500,
-    cotisations: {
-      CNSS: 1500,
-      AMO: 1200,
-      RetraiteComplementaire: 1000,
-      AssuranceChomage: 800
-    },
-    impots: {
-      IR: 2000
-    },
-    netAPayer: 18500
-  },
+  salaireBase: 20000,
+  primes: [
+    { libelle: "Congés payés", montant: 1000 },
+    { libelle: "Prime de rendement", montant: 2000 }
+  ],
+  heuresSupp: [
+    { libelle: "Heures nuit", montant: 1500 }
+  ],
+  cotisations: [
+    { libelle: "CNSS", montant: 1500, type: "patronale" },
+    { libelle: "AMO", montant: 1200, type: "patronale" },
+    { libelle: "Retraite Complémentaire", montant: 1000, type: "salariale" },
+    { libelle: "Assurance Chômage", montant: 800, type: "salariale" }
+  ],
+  impots: [
+    { libelle: "IR", montant: 2000 }
+  ],
+  netAPayer: 18500
+}
+,
   anomalies: [
     {
       type: 'Cotisation',
@@ -211,7 +206,7 @@ const mockBulletinData = {
     const data = await response.json()
 
     // Affiche le résultat
-    console.log("📦 Données reçues de l'API :", data)  // 👈 ICI
+    console.log("📦 Données reçues de l'API :", data)  
     setResultData(data)
     setShowSalaryResult(true)
   } catch (err: any) {
@@ -220,55 +215,47 @@ const mockBulletinData = {
 }
 
 
+const handleCareerCoaching = async () => {
+  setCareerUploading(true)
+  setCareerStatusMessage("Analyse en cours...")
 
-  const handleCareerCoaching = () => {
-    // Simulation de données de coaching carrière
-    const mockCareerData = {
-      objectif: careerFormData.objectif || 'Évoluer vers un poste de management',
-      competences: careerFormData.competences ? careerFormData.competences.split(',').map(c => c.trim()) : ['JavaScript', 'React', 'Node.js'],
-      secteur: careerFormData.secteur || 'Technologie',
-      planCarriere: {
-        etapes: [
-          {
-            titre: 'Senior Developer',
-            duree: '6-12 mois',
-            description: 'Renforcer vos compétences techniques et prendre plus de responsabilités',
-            competencesRequises: ['Leadership technique', 'Mentoring', 'Architecture'],
-            salaireEstime: 28000
-          },
-          {
-            titre: 'Team Lead',
-            duree: '1-2 ans',
-            description: 'Diriger une équipe de développeurs et gérer des projets',
-            competencesRequises: ['Management', 'Communication', 'Planification'],
-            salaireEstime: 35000
-          },
-          {
-            titre: 'Engineering Manager',
-            duree: '2-3 ans',
-            description: 'Gérer plusieurs équipes et définir la stratégie technique',
-            competencesRequises: ['Strategic thinking', 'Budget management', 'Hiring'],
-            salaireEstime: 45000
-          }
-        ]
+  try {
+    const response = await fetch("http://localhost:8000/api/coaching/coaching", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
-      scriptNegociation: {
-        points: [
-          'Mes réalisations et contributions à l\'équipe',
-          'Mon engagement dans la formation continue',
-          'Ma capacité à prendre des initiatives',
-          'Les résultats mesurables de mon travail'
-        ],
-        arguments: [
-          'J\'ai mené avec succès 3 projets majeurs cette année',
-          'J\'ai formé 2 nouveaux développeurs juniors',
-          'J\'ai proposé et implémenté des améliorations qui ont réduit les bugs de 30%',
-          'Je souhaite évoluer vers plus de responsabilités managériales'
-        ]
-      }
+      body: JSON.stringify({
+        goal: careerFormData.objectif || 'Évoluer vers un poste de management',
+        skills: careerFormData.competences
+          ? careerFormData.competences.split(',').map((c) => c.trim())
+          : ['JavaScript', 'React', 'Node.js'],
+        sector: careerFormData.secteur || 'Technologie',
+      }),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      console.error("Erreur :", result.detail);
+      setCareerStatusMessage("Erreur : " + result.detail)
+      return;
     }
-    setShowCareerResult(true)
+
+    // Tu peux stocker le résultat retourné dans un état pour l'affichage
+    console.log("✅ Données retournées :", result);
+    setCareerData(result); 
+    setShowCareerResult(true);
+    setCareerStatusMessage("Analyse terminée ✅")
+  } catch (error) {
+    console.error("❌ Erreur fetch coaching :", error);
+     setCareerStatusMessage("Erreur : " + (error as Error).message)
   }
+  finally {
+    setCareerUploading(false)
+  }
+};
+
 
   const tabs = [
     { id: 'bulletin-paie', label: 'Bulletin de Paie / contrat' },
@@ -276,6 +263,7 @@ const mockBulletinData = {
     { id: 'coaching-carriere', label: 'Coaching Carrière' }
   ]
 
+ 
   const renderTabContent = () => {
     switch (activeTab) {
       case 'bulletin-paie':
@@ -448,17 +436,18 @@ const mockBulletinData = {
               </select>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <button
-                onClick={handleCareerCoaching}
-                className="bg-gradient-to-r from-purple-500 to-cyan-400 text-white py-3 rounded-xl font-semibold hover:shadow-xl hover:shadow-purple-500/25 hover:scale-105 transition-all duration-300 transform"
-              >
+             <button
+               onClick={handleCareerCoaching}
+               disabled={careerUploading}
+               className="bg-gradient-to-r from-purple-500 to-cyan-400 text-white py-3 rounded-xl font-semibold hover:shadow-xl hover:shadow-purple-500/25 hover:scale-105 transition-all duration-300 transform"
+                                              >
                 <span className="flex items-center justify-center space-x-2">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                  <span>Générer mon plan de carrière</span>
-                </span>
+                 {careerUploading && <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>}
+                <span>{careerUploading ? 'Analyse en cours...' : 'Générer mon plan de carrière'}</span>
+               </span>
               </button>
+
+
               <button
                 onClick={handleCareerCoaching}
                 className="bg-gradient-to-r from-blue-500 to-pink-500 text-white py-3 rounded-xl font-semibold hover:shadow-xl hover:shadow-blue-500/25 hover:scale-105 transition-all duration-300 transform"
@@ -470,6 +459,9 @@ const mockBulletinData = {
                   <span>Script de négociation</span>
                 </span>
               </button>
+                {careerStatusMessage && (
+                <div className="text-center text-sm text-gray-600 mt-2">{careerStatusMessage}</div>
+              )}
             </div>
           </div>
         )
@@ -554,55 +546,13 @@ const mockBulletinData = {
 )}
 
 
-      {showCareerResult && (
-        <CareerCoachingResult
-          data={{
-            objectif: careerFormData.objectif || 'Évoluer vers un poste de management',
-            competences: careerFormData.competences ? careerFormData.competences.split(',').map(c => c.trim()) : ['JavaScript', 'React', 'Node.js'],
-            secteur: careerFormData.secteur || 'Technologie',
-            planCarriere: {
-              etapes: [
-                {
-                  titre: 'Senior Developer',
-                  duree: '6-12 mois',
-                  description: 'Renforcer vos compétences techniques et prendre plus de responsabilités',
-                  competencesRequises: ['Leadership technique', 'Mentoring', 'Architecture'],
-                  salaireEstime: 28000
-                },
-                {
-                  titre: 'Team Lead',
-                  duree: '1-2 ans',
-                  description: 'Diriger une équipe de développeurs et gérer des projets',
-                  competencesRequises: ['Management', 'Communication', 'Planification'],
-                  salaireEstime: 35000
-                },
-                {
-                  titre: 'Engineering Manager',
-                  duree: '2-3 ans',
-                  description: 'Gérer plusieurs équipes et définir la stratégie technique',
-                  competencesRequises: ['Strategic thinking', 'Budget management', 'Hiring'],
-                  salaireEstime: 45000
-                }
-              ]
-            },
-            scriptNegociation: {
-              points: [
-                'Mes réalisations et contributions à l\'équipe',
-                'Mon engagement dans la formation continue',
-                'Ma capacité à prendre des initiatives',
-                'Les résultats mesurables de mon travail'
-              ],
-              arguments: [
-                'J\'ai mené avec succès 3 projets majeurs cette année',
-                'J\'ai formé 2 nouveaux développeurs juniors',
-                'J\'ai proposé et implémenté des améliorations qui ont réduit les bugs de 30%',
-                'Je souhaite évoluer vers plus de responsabilités managériales'
-              ]
-            }
-          }}
-          onClose={() => setShowCareerResult(false)}
-        />
-      )}
+      {showCareerResult && careerData && (
+  <CareerCoachingResult
+    data={careerData}
+    onClose={() => setShowCareerResult(false)}
+  />
+)}
+
     </div>
   )
 }

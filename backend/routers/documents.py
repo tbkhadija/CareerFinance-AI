@@ -1,6 +1,6 @@
 from fastapi import APIRouter, UploadFile, File
 from services.ocr_service import extract_text_from_pdf, extract_text_from_image
-from services.gemini_service import analyze_with_gemini
+from services.gemini_doc import analyze_with_gemini
 
 router = APIRouter()
 @router.post("/upload")

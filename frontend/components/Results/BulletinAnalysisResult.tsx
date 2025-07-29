@@ -3,6 +3,10 @@
 import { useState } from 'react'
 import { FileText, AlertTriangle, CheckCircle, TrendingUp, Download, Share2, Eye } from 'lucide-react'
 
+type LigneMontant = { libelle: string; montant: number }
+type Cotisation = LigneMontant & { type: string }
+
+
 
 export interface Anomalie {
   type: string
@@ -22,20 +26,13 @@ export interface BulletinData {
   }
 
   details: {
-    salaireBase: number
-    primes: number
-    heuresSupp: number
-    cotisations: {
-      CNSS: number
-      AMO: number
-      RetraiteComplementaire: number
-      AssuranceChomage: number
-    }
-    impots: {
-      IR: number
-    }
-    netAPayer: number
-  }
+  salaireBase: number
+  primes: LigneMontant[]
+  heuresSupp: LigneMontant[]
+  cotisations: Cotisation[]
+  impots: LigneMontant[]
+  netAPayer: number
+}
 
   anomalies: Anomalie[]
   recommandations: string[]
@@ -101,6 +98,12 @@ export default function BulletinAnalysisResult({ data, onClose }: BulletinAnalys
         )
 
       case 'details':
+       const sommeMontant = (arr: any): number => {
+  if (!Array.isArray(arr)) return 0
+  return arr.reduce((acc, item) => acc + (item?.montant || 0), 0)
+}
+
+
         return (
           <div className="space-y-4">
             <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
@@ -108,27 +111,39 @@ export default function BulletinAnalysisResult({ data, onClose }: BulletinAnalys
               <div className="space-y-3">
                 <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
                   <span className="text-gray-600 dark:text-gray-300">Salaire de base</span>
-                  <span className="font-semibold text-gray-900 dark:text-white">{(data.details.salaireBase).toLocaleString()} MAD</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">
+                    {data.details.salaireBase.toLocaleString()} MAD
+                  </span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
                   <span className="text-gray-600 dark:text-gray-300">Primes</span>
-                  <span className="font-semibold text-green-600">+{data.details.primes.toLocaleString()} MAD</span>
+                  <span className="font-semibold text-green-600">
+                    +{sommeMontant(data.details.primes).toLocaleString()} MAD
+                  </span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
                   <span className="text-gray-600 dark:text-gray-300">Heures supplémentaires</span>
-                  <span className="font-semibold text-green-600">+{data.details.heuresSupp.toLocaleString()} MAD</span>
+                  <span className="font-semibold text-green-600">
+                    +{sommeMontant(data.details.heuresSupp).toLocaleString()} MAD
+                  </span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
                   <span className="text-gray-600 dark:text-gray-300">Cotisations sociales</span>
-                  <span className="font-semibold text-red-600">-{data.details.cotisations.toLocaleString()} MAD</span>
+                  <span className="font-semibold text-red-600">
+                    -{sommeMontant(data.details.cotisations).toLocaleString()} MAD
+                  </span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
                   <span className="text-gray-600 dark:text-gray-300">Impôt sur le revenu</span>
-                  <span className="font-semibold text-red-600">-{data.details.impots.toLocaleString()} MAD</span>
+                  <span className="font-semibold text-red-600">
+                    -{sommeMontant(data.details.impots).toLocaleString()} MAD
+                  </span>
                 </div>
                 <div className="flex justify-between items-center py-3 bg-gray-50 dark:bg-gray-700 rounded-lg px-4 mt-4">
                   <span className="font-semibold text-gray-900 dark:text-white">Net à payer</span>
-                  <span className="font-bold text-xl text-green-600">{data.resume.salaireNet.toLocaleString()} MAD</span>
+                  <span className="font-bold text-xl text-green-600">
+                    {data.resume.salaireNet.toLocaleString()} MAD
+                  </span>
                 </div>
               </div>
             </div>

@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routers import documents
 from routers import salary
+from routers import coaching
 
 
 app = FastAPI()
@@ -17,5 +18,6 @@ app.add_middleware(
 
 app.include_router(documents.router, prefix="/api/documents")
 app.include_router(salary.router, prefix="/api/salary")
+app.include_router(coaching.router, prefix="/api/coaching")
 
 

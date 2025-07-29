@@ -35,13 +35,25 @@ Analyse le contenu et retourne un objet JSON avec les 4 sections suivantes :
     "impots": ...
   }},
   "details": {{
-    "salaireBase": ...,
-    "primes": ...,
-    "heuresSupp": ...,
-    "cotisations": ...,
-    "impots": ...,
-    "netAPayer": ...
-  }},
+  "salaireBase": 20000,
+  "primes": [
+    {{ "libelle": "Prime ancienneté", "montant": 1000 }},
+    {{ "libelle": "Prime performance", "montant": 2000 }}
+  ],
+  "heuresSupp": [
+    {{ "libelle": "Heures nuit", "montant": 500 }},
+    {{ "libelle": "Heures week-end", "montant": 1500 }}
+  ],
+  "cotisations": [
+    {{ "libelle": "CNSS", "montant": 800, "type": "patronale" }},
+    {{ "libelle": "Retraite", "montant": 500, "type": "salariale" }}
+  ],
+  "impots": [
+    {{ "libelle": "IR", "montant": 2000 }}
+  ],
+  "netAPayer": 19500
+}},
+
   "anomalies": [
     {{
       "titre": "...",
@@ -55,8 +67,9 @@ Analyse le contenu et retourne un objet JSON avec les 4 sections suivantes :
     ...
   ]
 }}
-
-👉 Utilise des valeurs numériques en MAD et du texte clair. Ne mets pas de balises Markdown (pas de ```json).
+👉 Utilise des valeurs numériques en MAD (pas de string).
+👉 N'utilise **aucune balise Markdown** (ex: pas de ```json).
+👉 Le JSON doit être **valide et prêt à parser** avec `json.lo
 👉 Donne des recommandations personnalisées en lien avec le texte.
 
 Retourne seulement l’objet JSON.
